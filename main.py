@@ -10,6 +10,7 @@ pygame.display.set_caption("Hangman Game")
 
 #font
 FONT = pygame.font.SysFont('comicsans', 40)
+WORD_FONT = pygame.font.SysFont('comicsans', 60)
 
 #load the images
 images = []
@@ -32,6 +33,8 @@ for i in range(26):
 
 #game variables
 hangman_status = 0
+word = "PYTHON"
+guessed = []
 
 #main loop
 FPS = 60
@@ -43,6 +46,18 @@ BLACK = (0, 0, 0)
 def draw():
 	win.fill(WHITE)
 
+	#drawing word
+	display_word = ""
+	for letter in word:
+		if letter in guessed:
+			display_word += letter + " "
+		else:
+			display_word += "_ "
+
+	text = WORD_FONT.render(display_word, 1, BLACK)
+	win.blit(text, (400, 200))
+
+	#drawing buttons
 	for letter in letters:
 		x, y, alphabet, is_visible = letter
 		if is_visible:
@@ -52,6 +67,14 @@ def draw():
 
 	win.blit(images[hangman_status], (150, 100))
 	pygame.display.update()
+
+def display_message(message):
+	pygame.time.delay(1000)
+	win.fill(WHITE)
+	text = WORD_FONT.render(message, 1, BLACK)
+	win.blit(text, (WIN_WIDTH/2 - text.get_width()/2, WIN_HEIGHT/2 - text.get_height()/2))
+	pygame.display.update()
+	pygame.time.delay(3000)
 
 
 while run:
@@ -70,7 +93,23 @@ while run:
 				if is_visible:
 					distance = math.sqrt((x - mouse_x)**2 + (y - mouse_y)**2)
 					if distance < BUTTON_RADIUS:
-						print(alphabet)
 						letter[3] = False
+						guessed.append(alphabet)
+						if alphabet not in word:
+							hangman_status += 1
+
+	is_won = True
+	for letter in word:
+		if letter not in guessed:
+			is_won = False
+			break
+
+	if is_won:
+		display_message("You WON!")
+		break
+
+	if hangman_status == 6:
+		display_message("You LOST!")
+		break
 
 pygame.quit()
