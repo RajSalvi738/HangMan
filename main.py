@@ -14,39 +14,18 @@ FONT = pygame.font.SysFont('comicsans', 40)
 WORD_FONT = pygame.font.SysFont('comicsans', 60)
 TITLE_FONT = pygame.font.SysFont('comicsans', 70)
 
+#colours
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
 #load the images
 images = []
 for img in os.listdir('images/'):
 	image = pygame.image.load('images/' + img)
 	images.append(image)
 
-#button
-BUTTON_RADIUS = 20
-BUTTON_GAP = 15
-letters = []
-startX = round((WIN_WIDTH - (BUTTON_RADIUS * 2 + BUTTON_GAP) * 13) / 2)
-startY = 400
-A = 65
 
-for i in range(26):
-	x = startX + BUTTON_GAP * 2 + ((BUTTON_RADIUS * 2 + BUTTON_GAP) * (i % 13))
-	y = startY + ((i // 13) * (BUTTON_GAP + BUTTON_RADIUS * 2))
-	letters.append([x, y, chr(A + i), True])
-
-#game variables
-hangman_status = 0
-words = ['HELLO', 'DEVELOPER', 'PYGAME', 'GITHUB']
-word = random.choice(words)
-guessed = []
-
-#main loop
-FPS = 60
-clock = pygame.time.Clock()
-run = True
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-def draw():
+def draw(win, hangman_status, letters, word, guessed, BUTTON_RADIUS):
 	win.fill(WHITE)
 
 	#drawing title
@@ -83,40 +62,89 @@ def display_message(message):
 	pygame.display.update()
 	pygame.time.delay(3000)
 
+def button(BUTTON_RADIUS, BUTTON_GAP):
+	letters = []
+	startX = round((WIN_WIDTH - (BUTTON_RADIUS * 2 + BUTTON_GAP) * 13) / 2)
+	startY = 400
+	A = 65
 
-while run:
-	clock.tick(FPS)
+	for i in range(26):
+		x = startX + BUTTON_GAP * 2 + ((BUTTON_RADIUS * 2 + BUTTON_GAP) * (i % 13))
+		y = startY + ((i // 13) * (BUTTON_GAP + BUTTON_RADIUS * 2))
+		letters.append([x, y, chr(A + i), True])
 
-	for event in pygame.event.get():
-		if event.type == pygame.QUIT:
+	return letters
+
+def choose_word(words):
+	return random.choice(words)
+
+def main(win):
+	FPS = 60
+	clock = pygame.time.Clock()
+	run = True
+	hangman_status = 0
+
+	BUTTON_RADIUS = 20
+	BUTTON_GAP = 15
+
+	words = ['HELLO', 'DEVELOPER', 'PYGAME', 'GITHUB']	
+	guessed = []
+
+	word = choose_word(words)
+
+	letters = button(BUTTON_RADIUS, BUTTON_GAP)
+
+	while run:
+		clock.tick(FPS)
+
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				run = False
+
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				mouse_x, mouse_y = pygame.mouse.get_pos()
+				for letter in letters:
+					x, y, alphabet, is_visible = letter
+					if is_visible:
+						distance = math.sqrt((x - mouse_x)**2 + (y - mouse_y)**2)
+						if distance < BUTTON_RADIUS:
+							letter[3] = False
+							guessed.append(alphabet)
+							if alphabet not in word:
+								hangman_status += 1
+
+		draw(win, hangman_status, letters, word, guessed, BUTTON_RADIUS)
+
+		is_won = True
+		for letter in word:
+			if letter not in guessed:
+				is_won = False
+				break
+
+		if is_won:
+			display_message("You WON!")
+			hangman_status = 0
+			guessed = []
+			word = random.choice
 			run = False
 
-		if event.type == pygame.MOUSEBUTTONDOWN:
-			mouse_x, mouse_y = pygame.mouse.get_pos()
-			for letter in letters:
-				x, y, alphabet, is_visible = letter
-				if is_visible:
-					distance = math.sqrt((x - mouse_x)**2 + (y - mouse_y)**2)
-					if distance < BUTTON_RADIUS:
-						letter[3] = False
-						guessed.append(alphabet)
-						if alphabet not in word:
-							hangman_status += 1
+		if hangman_status == 6:
+			display_message("You LOST!")
+			run = False
 
-	draw()
+def main_menu(win):
+	run = True
+	while run:
+		win.fill(WHITE)
+		text = WORD_FONT.render("Press Any Key To Play", 1, BLACK)
+		win.blit(text, (WIN_WIDTH/2 - text.get_width()/2, WIN_HEIGHT/2 - text.get_height()/2))
+		pygame.display.update()
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				run = False
+			if event.type == pygame.KEYDOWN:
+				main(win)
 
-	is_won = True
-	for letter in word:
-		if letter not in guessed:
-			is_won = False
-			break
+	pygame.display.quit()
 
-	if is_won:
-		display_message("You WON!")
-		break
-
-	if hangman_status == 6:
-		display_message("You LOST!")
-		break
-
-pygame.quit()
+main_menu(win)
