@@ -1,6 +1,7 @@
 import pygame
 import os
 import math
+import random
 
 #display setup
 pygame.init()
@@ -11,6 +12,7 @@ pygame.display.set_caption("Hangman Game")
 #font
 FONT = pygame.font.SysFont('comicsans', 40)
 WORD_FONT = pygame.font.SysFont('comicsans', 60)
+TITLE_FONT = pygame.font.SysFont('comicsans', 70)
 
 #load the images
 images = []
@@ -33,7 +35,8 @@ for i in range(26):
 
 #game variables
 hangman_status = 0
-word = "PYTHON"
+words = ['HELLO', 'DEVELOPER', 'PYGAME', 'GITHUB']
+word = random.choice(words)
 guessed = []
 
 #main loop
@@ -45,6 +48,10 @@ BLACK = (0, 0, 0)
 
 def draw():
 	win.fill(WHITE)
+
+	#drawing title
+	text = TITLE_FONT.render("HANGMAN", 1, BLACK)
+	win.blit(text, (WIN_WIDTH/2 - text.get_width()/2, 20))
 
 	#drawing word
 	display_word = ""
@@ -80,8 +87,6 @@ def display_message(message):
 while run:
 	clock.tick(FPS)
 
-	draw()
-
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
@@ -97,6 +102,8 @@ while run:
 						guessed.append(alphabet)
 						if alphabet not in word:
 							hangman_status += 1
+
+	draw()
 
 	is_won = True
 	for letter in word:
